@@ -45,14 +45,13 @@ ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
--- Table `LittleLemonDB`.`Menu`
+-- Table `LittleLemonDB`.`Menue`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `LittleLemonDB`.`Menu` (
-  `Menu_ID` INT NOT NULL,
-  `Item_Type` VARCHAR(45) NOT NULL,
-  `Item_Name` VARCHAR(100) NOT NULL,
-  `Price` DECIMAL(10,2) NOT NULL,
-  PRIMARY KEY (`Menu_ID`))
+CREATE TABLE IF NOT EXISTS `LittleLemonDB`.`Menue` (
+  `Menue_ID` INT NOT NULL,
+  `Item_Type` ENUM('Cuisine', 'Starter', 'Course', 'Drink', 'Dessert') NOT NULL,
+  `Item_Name` VARCHAR(50) NOT NULL,
+  PRIMARY KEY (`Menue_ID`))
 ENGINE = InnoDB;
 
 
@@ -74,25 +73,16 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `LittleLemonDB`.`Orders` (
   `Order_ID` INT NOT NULL,
-  `Order_Date` DATE NOT NULL,
+  `Order_Date` DATETIME NOT NULL,
   `Booking_ID` INT NULL,
-  `Menu_ID` INT NULL,
-  `Quantity` INT NOT NULL,
-  `Total_Cost` DECIMAL(10,2) NOT NULL,
-  `Item_Cost` DECIMAL(10,2) NOT NULL,
   `Staff_ID` INT NULL,
+  `Total_Price` DECIMAL(10,2) NOT NULL CHECK (Total_Price >= 0),
   PRIMARY KEY (`Order_ID`),
   INDEX `Booking_ID_idx` (`Booking_ID` ASC) VISIBLE,
-  INDEX `Menu_ID_idx` (`Menu_ID` ASC) VISIBLE,
   INDEX `Staff_ID_idx` (`Staff_ID` ASC) VISIBLE,
   CONSTRAINT `Booking_ID`
     FOREIGN KEY (`Booking_ID`)
     REFERENCES `LittleLemonDB`.`Bookings` (`Booking_ID`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `Menu_ID`
-    FOREIGN KEY (`Menu_ID`)
-    REFERENCES `LittleLemonDB`.`Menu` (`Menu_ID`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION,
   CONSTRAINT `Staff_ID`
@@ -104,16 +94,41 @@ ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
+-- Table `LittleLemonDB`.`OrderItems`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `LittleLemonDB`.`OrderItems` (
+  `Order_ItemID` INT NOT NULL,
+  `Order_ID` INT NULL,
+  `Menue_ID` INT NULL,
+  `Quantity` INT NOT NULL CHECK (Quantity >= 0),
+  `Item_Cost` DECIMAL(10,2) NOT NULL CHECK (Item_Cost >= 0),
+  PRIMARY KEY (`Order_ItemID`),
+  INDEX `Menu_ID_idx` (`Menue_ID` ASC) VISIBLE,
+  INDEX `Order_ID_idx` (`Order_ID` ASC) VISIBLE,
+  CONSTRAINT `Menue_ID`
+    FOREIGN KEY (`Menue_ID`)
+    REFERENCES `LittleLemonDB`.`Menue` (`Menue_ID`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `Order_ID`
+    FOREIGN KEY (`Order_ID`)
+    REFERENCES `LittleLemonDB`.`Orders` (`Order_ID`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
 -- Table `LittleLemonDB`.`OrderDeliveryStatus`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `LittleLemonDB`.`OrderDeliveryStatus` (
   `DeliveryStatus_ID` INT NOT NULL,
-  `Order_ID` INT NOT NULL,
+  `Order_ID` INT NULL,
   `Delivery_Date` DATE NULL,
   `Status` VARCHAR(45) NOT NULL,
   PRIMARY KEY (`DeliveryStatus_ID`),
   INDEX `Order_ID_idx` (`Order_ID` ASC) VISIBLE,
-  CONSTRAINT `Order_ID`
+  CONSTRAINT `FK_Order_DeliveryStatus`
     FOREIGN KEY (`Order_ID`)
     REFERENCES `LittleLemonDB`.`Orders` (`Order_ID`)
     ON DELETE NO ACTION
